@@ -9,13 +9,13 @@ TESTS = test/step0.exe \
 CFLAGS := $(CFLAGS) -g -W -Wall -Wno-unused-parameter -iquote .
 
 ifeq ($(shell uname),Linux)
-  # Linux specific settings
-  BASE = platform/linux
-  CFLAGS := $(CFLAGS) -pthread -iquote $(BASE)
+	# Linux specific settings
+	BASE = platform/linux
+	CFLAGS := $(CFLAGS) -pthread -iquote $(BASE)
 endif
 
 ifeq ($(shell uname),Darwin)
-  # macOS specific settings
+	# macOS specific settings
 endif
 
 .SUFFIXES:
