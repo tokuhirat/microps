@@ -63,7 +63,7 @@ static void ip_dump(const uint8_t *data, size_t size) {
     v = (hdr->vhl & 0xf0) >> 4;
     hl = hdr->vhl & 0x0f;
     hlen = hl << 2;
-    fprintf(stderr, "        vhl: 0x%02x [x: %u, hl: %u (%u)]\n", hdr->vhl, v, hl, hlen);
+    fprintf(stderr, "        vhl: 0x%02x [v: %u, hl: %u (%u)]\n", hdr->vhl, v, hl, hlen);
     fprintf(stderr, "        tos: 0x%02x\n", hdr->tos);
     total = ntoh16(hdr->total);
     fprintf(stderr, "      total: %u (payload: %u)\n", total, total - hlen);
@@ -92,26 +92,26 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
     }
 
     hdr = (struct ip_hdr *)data;
-    v = (hdr->vhl & 0xf0) >> 4;
-    hlen = (hdr->vhl & 0x0f) << 2;
+    v = hdr->vhl >> 4;
     if (v != IP_VERSION_IPV4) {
-        errorf("not IPv4");
+        errorf("ip version error: v=%u", v);
         return;
     }
 
+    hlen = (hdr->vhl & 0x0f) << 2;
     if (len < hlen) {
-        errorf("shorter than heder len");
+        errorf("header length error: len=%zu < hlen=%u", len, hlen);
         return;
     }
 
     total = ntoh16(hdr->total);
     if (len < total) {
-        errorf("shorter than total");
+        errorf("total length error: len=%zu < total=%u", len, total);
         return;
     }
     
     if (cksum16((uint16_t *)hdr, hlen, 0) != 0) {
-        errorf("check sum not same");
+        errorf("checksum error: sum=0x%04x, verify=0x%04x", ntoh16(hdr->sum), ntoh16(cksum16((uint16_t *)hdr, hlen, -hdr->sum)));
         return;
     }
 
@@ -121,7 +121,7 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
         return;
     }
 
-    debugf("dev=%s, len=%zu", dev->name, len);
+    debugf("dev=%s, protocol=%u, total=%u", dev->name, hdr->protocol, total);
     ip_dump(data, len);
 }
 
