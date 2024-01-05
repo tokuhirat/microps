@@ -106,7 +106,7 @@ int intr_run(void) {
 }
 
 void intr_shutdown(void) {
-    if (pthread_equal(tid, pthread_self()) != -0) {
+    if (pthread_equal(tid, pthread_self()) != 0) {
         /* Thread not created */
         return;
     }
