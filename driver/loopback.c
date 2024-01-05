@@ -49,7 +49,7 @@ static int loopback_transmit(struct net_device *dev, uint16_t type, const uint8_
     queue_push(&PRIV(dev)->queue, entry);
     num = PRIV(dev)->queue.num;
     mutex_unlock(&PRIV(dev)->mutex);
-    debugf("queue pushed (num:%u), dev=%s, type=0x%04x, len=%zd", num, dev->name, type, len);
+    debugf("queue pushed (num:%u), dev=%s, type=0x%04x, len=%zu", num, dev->name, type, len);
     debugdump(data, len);
     intr_raise_irq(PRIV(dev)->irq);
     return 0;
@@ -65,7 +65,7 @@ static int loopback_isr(unsigned int irq, void *id) {
         entry = queue_pop(&PRIV(dev)->queue);
         if (!entry)
             break;
-        debugf("queue popped (num:%u), dev=%s, type=0x%04x, len=%zd", PRIV(dev)->queue.num, dev->name, entry->type, entry->len);
+        debugf("queue popped (num:%u), dev=%s, type=0x%04x, len=%zu", PRIV(dev)->queue.num, dev->name, entry->type, entry->len);
         debugdump(entry->data, entry->len);
         net_input_handler(entry->type, entry->data, entry->len, dev);
         memory_free(entry);
@@ -89,7 +89,7 @@ struct net_device *loopback_init(void) {
     }
     dev->type = NET_DEVICE_TYPE_LOOPBACK;
     dev->mtu = LOOPBACK_MTU;
-    dev->hlen = 0; /* non header */
+    dev->hlen = 0;  /* non header */
     dev->alen = 0;  /* non header */
     dev->flags = NET_DEVICE_FLAG_LOOPBACK;
     dev->ops = &loopback_ops;
@@ -108,7 +108,7 @@ struct net_device *loopback_init(void) {
         errorf("net_device_register() failure");
         return NULL;
     }
-    intr_request_irq(LOOPBACK_IRQ, loopback_isr, INTR_IRQ_SHARED, dev->name, dev);
+    intr_request_irq(lo->irq, loopback_isr, INTR_IRQ_SHARED, dev->name, dev);
     debugf("initialized, dev=%s", dev->name);
     return dev;
 }
