@@ -111,7 +111,7 @@ int net_protocol_register(uint16_t type, void (*handler)(const uint8_t *data, si
     }
     proto = memory_alloc(sizeof(*proto));
     if (!proto) {
-        errorf("memory_alloc() faliure");
+        errorf("memory_alloc() failure");
         return -1;
     }
     proto->type = type;
@@ -136,7 +136,11 @@ int net_input_handler(uint16_t type, const uint8_t *data, size_t len, struct net
             entry->dev = dev;
             entry->len = len;
             memcpy(entry->data, data, len);
-            queue_push(&proto->queue, entry);
+            if (!queue_push(&proto->queue, entry)) {
+                errorf("queue_push() failure");
+                memory_free(entry);
+                return -1;
+            }
             debugf("queue pushed (num:%u), dev=%s, type=0x%04x, len=%zu", proto->queue.num, dev->name, type, len);
             debugdump(data, len);
             return 0;
