@@ -97,12 +97,12 @@ struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask) {
     NET_IFACE(iface)->family = NET_IFACE_FAMILY_IP;
 
     if (ip_addr_pton(unicast, &iface->unicast) == -1) {
-        errorf("ip_addr_pton() failure");
+        errorf("ip_addr_pton() failure, addr=%s", unicast);
         memory_free(iface);
         return NULL;
     }
     if (ip_addr_pton(netmask, &iface->netmask) == -1) {
-        errorf("ip_addr_pton() failure");
+        errorf("ip_addr_pton() failure, addr=%s", netmask);
         memory_free(iface);
         return NULL;
     }
@@ -184,16 +184,14 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
 
     iface = (struct ip_iface *)net_device_get_iface(dev, NET_IFACE_FAMILY_IP);
     if (!iface) {
-        errorf("net_device_get_iface() failure");
+        /* iface is not registered to the device */
         return;
     }
-
-    if (
-        hdr->dst != iface->unicast &&
-        hdr->dst != 0xffffffff &&
-        hdr->dst != iface->broadcast
-    ) {
-        return;
+    if (hdr->dst != iface->unicast) {
+        if (hdr->dst != iface->broadcast && hdr->dst != IP_ADDR_BROADCAST) {
+            /* for other host */
+            return;
+        }
     }
 
     debugf("dev=%s, iface=%s, protocol=%u, total=%u",
