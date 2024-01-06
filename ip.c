@@ -221,26 +221,22 @@ static ssize_t ip_output_core(struct ip_iface *iface, uint8_t protocol, const ui
     uint16_t hlen, total;
     char addr[IP_ADDR_STR_LEN];
 
-    if (protocol != 1) {
-        errorf("IPv4 only");
-        return;
-    }
-
     hdr = (struct ip_hdr *)buf;
     hlen = IP_HDR_SIZE_MIN;
-    hdr->vhl = 4 << 4 | (hlen >> 2);
+    hdr->vhl = (IP_VERSION_IPV4 << 4) | (hlen >> 2);
     hdr->tos = 0;
-    total = len + hlen;
+    total = hlen + len;
     hdr->total = hton16(total);
     hdr->id = hton16(id);
-    hdr->offset = offset;
-    hdr->ttl = 255;
-    hdr->protocol = NET_IFACE_FAMILY_IP;
+    hdr->offset = hton16(offset);
+    hdr->ttl = 0xff;
+    hdr->protocol = protocol;
     hdr->sum = 0;
     hdr->src = src;
     hdr->dst = dst;
-    hdr->sum = cksum16((uint16_t *)hdr, hlen, 0);
-    memcpy(&buf[hlen + 1], data, len);
+
+    hdr->sum = cksum16((uint16_t *)hdr, hlen, 0); /* don't convert byteoder */
+    memcpy(hdr + 1, data, len);
 
     debugf("dev=%s, dst=%s, protocol=%u, len=%u",
         NET_IFACE(iface)->dev->name, ip_addr_ntop(dst, addr, sizeof(addr)), protocol, total);
@@ -267,17 +263,14 @@ ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len, ip_addr_t s
     if (src == IP_ADDR_ANY) {
         errorf("ip routing does not implement");
         return -1;
-    } else { /* Note: I'll rewrite this block later. */
-        for (iface = ifaces; iface; iface = iface->next) {
-            if (iface->unicast == src)
-                break;
-        }
+    } else { /* NOTE: I'll rewrite this block later. */
+        iface = ip_iface_select(src);
         if (!iface) {
-            errorf("iface not found");
+            errorf("iface not found, src=%s", ip_addr_ntop(src, addr, sizeof(addr)));
             return -1;
         }
         if ((dst & iface->netmask) != (iface->unicast & iface->netmask) && dst != IP_ADDR_BROADCAST) {
-            errorf("invalid ip");
+            errorf("not reached, dst=%s", ip_addr_ntop(src, addr, sizeof(addr)));
             return -1;
         }
     }
@@ -288,7 +281,7 @@ ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len, ip_addr_t s
         return -1;
     }
     id = ip_generate_id();
-    if (ip_output_core(iface, protocol, data, len, iface->unicast, dst, id, 0) == -1){
+    if (ip_output_core(iface, protocol, data, len, iface->unicast, dst, id, 0) == -1) {
         errorf("ip_output_core() failure");
         return -1;
     }
