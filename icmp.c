@@ -41,7 +41,7 @@ static char *icmp_type_ntoa(uint8_t type) {
     case ICMP_TYPE_TIMESTAMPREPLY:
         return "TimestampReply";
     case ICMP_TYPE_INFO_REQUEST:
-        return "InformationEwquest";
+        return "InformationRequest";
     case ICMP_TYPE_INFO_REPLY:
         return "InformationReply";
     }
@@ -60,7 +60,7 @@ static void icmp_dump(const uint8_t *data, size_t len) {
     switch (hdr->type) {
     case ICMP_TYPE_ECHOREPLY:
     case ICMP_TYPE_ECHO:
-    echo = (struct icmp_echo *)hdr;
+        echo = (struct icmp_echo *)hdr;
         fprintf(stderr, "         id: %u\n", ntoh16(echo->id));
         fprintf(stderr, "        seq: %u\n", ntoh16(echo->seq));
         break;
@@ -75,15 +75,17 @@ static void icmp_dump(const uint8_t *data, size_t len) {
 }
 
 void icmp_input(const uint8_t *data, size_t len, ip_addr_t src, ip_addr_t dst, struct ip_iface *iface) {
+    struct icmp_hdr *hdr;
     char addr1[IP_ADDR_STR_LEN];
     char addr2[IP_ADDR_STR_LEN];
 
-    if (len < ICMP_HDR_SIZE) {
+    if (len < sizeof(*hdr)) {
         errorf("too short");
         return;
     }
+    hdr = (struct icmp_hdr *)data;
     if (cksum16((uint16_t *)data, len, 0) != 0) {
-        errorf("checksum error");
+        errorf("checksum error, sum=0x%04x, verify=0x%04x", ntoh16(hdr->sum), ntoh16(cksum16((uint16_t *)data, len, -hdr->sum)));
         return;
     }
     debugf("%s => %s, len=%zu", ip_addr_ntop(src, addr1, sizeof(addr1)), ip_addr_ntop(dst, addr2, sizeof(addr2)), len);
