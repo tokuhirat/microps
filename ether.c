@@ -27,7 +27,7 @@ int ether_addr_pton(const char *p, uint8_t *n) {
         return -1;
     for (index = 0; index < ETHER_ADDR_LEN; index++) {
         val = strtol(p, &ep, 16);
-        if (ep == p || val < 0 || val > 0xff  || (index < ETHER_ADDR_LEN - 1 && *ep != ':'))
+        if (ep == p || val < 0 || val > 0xff || (index < ETHER_ADDR_LEN - 1 && *ep != ':'))
             break;
         n[index] = (uint8_t)val;
         p = ep + 1;
@@ -60,7 +60,7 @@ static void ether_dump(const uint8_t *frame, size_t flen) {
 }
 
 int ether_transmit_helper(struct net_device *dev, uint16_t type, const uint8_t *data, size_t len, const void *dst, ether_transmit_func_t callback) {
-    uint8_t frame[ETHER_FRAME_SIZE_MAX] ={};
+    uint8_t frame[ETHER_FRAME_SIZE_MAX] = {};
     struct ether_hdr *hdr;
     size_t flen, pad = 0;
 
@@ -96,7 +96,7 @@ int ether_input_helper(struct net_device *dev, ether_input_func_t callback) {
         }
     }
     type = ntoh16(hdr->type);
-    debugf("dev=%s, type=0x%04x, len=%zu", dev->name, type, flen);
+    debugf("dev=%s, type=0x%04x, len=%zd", dev->name, type, flen);
     ether_dump(frame, flen);
     return net_input_handler(type, (uint8_t *)(hdr + 1), flen - sizeof(*hdr), dev);
 }
