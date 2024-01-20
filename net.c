@@ -227,16 +227,16 @@ int net_init(void) {
         errorf("intr_init() failure");
         return -1;
     }
+    if (arp_init() == -1) {
+        errorf("arp_init() failure");
+        return -1;
+    }
     if (ip_init() == -1) {
         errorf("ip_init() failure");
         return -1;
     }
     if (icmp_init() == -1) {
         errorf("icmp_init() failure");
-        return -1;
-    }
-    if (arp_init() == -1) {
-        errorf("arp_init() failure");
         return -1;
     }
     infof("initialized");
