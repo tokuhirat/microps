@@ -236,7 +236,7 @@ int ip_protocol_register(uint8_t type, void (*handler)(const uint8_t *data, size
             return -1;
         }
     }
-    entry = memory_alloc(sizeof(entry));
+    entry = memory_alloc(sizeof(*entry));
     if (!entry) {
         errorf("memory_alloc() failure");
         return -1;
@@ -374,7 +374,7 @@ static uint16_t ip_generate_id(void) {
 }
 
 ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len, ip_addr_t src, ip_addr_t dst) {
-    struct ip_route *route;    
+    struct ip_route *route;
     struct ip_iface *iface;
     char addr[IP_ADDR_STR_LEN];
     ip_addr_t nexthop;
@@ -386,12 +386,12 @@ ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len, ip_addr_t s
     }
     route = ip_route_lookup(dst);
     if (!route) {
-        errorf("no route to host, addr=%s", ip_addr_ntop(dst, addr, sizeof(addr)));
+        errorf("no route to host, dst=%s", ip_addr_ntop(dst, addr, sizeof(addr)));
         return -1;
     }
     iface = route->iface;
     if (src != IP_ADDR_ANY && src != iface->unicast) {
-        errorf("unable to output with specified source address, addr=%s", ip_addr_ntop(src, addr, sizeof(addr)));
+        errorf("unable to output with specified source address, src=%s", ip_addr_ntop(src, addr, sizeof(addr)));
         return -1;
     }
     nexthop = (route->nexthop != IP_ADDR_ANY) ? route->nexthop : dst;
