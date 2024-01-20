@@ -43,8 +43,8 @@ static int ether_tap_addr(struct net_device *dev) {
         return -1;
     }
     strncpy(ifr.ifr_name, PRIV(dev)->name, sizeof(ifr.ifr_name) - 1);
-    if (ioctl(soc, SIOCGIFADDR, &ifr) == -1) {
-        errorf("ioctl [SIOCGIFADDR]: %s, dev=%s", strerror(errno), dev->name);
+    if (ioctl(soc, SIOCGIFHWADDR, &ifr) == -1) {
+        errorf("ioctl(SIOCGIFHWADDR): %s, dev=%s", strerror(errno), dev->name);
         close(soc);
         return -1;
     }
@@ -66,20 +66,20 @@ static int ether_tap_open(struct net_device *dev) {
     strncpy(ifr.ifr_name, tap->name, sizeof(ifr.ifr_name) - 1);
     ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
     if (ioctl(tap->fd, TUNSETIFF, &ifr) == -1) {
-        errorf("ioctl [TUNSETIFF]: %s, dev=%s", strerror(errno), dev->name);
+        errorf("ioctl(TUNSETIFF): %s, dev=%s", strerror(errno), dev->name);
         close(tap->fd);
         return -1;
     }
 
     /* Set Asynchronous I/O signal delivery destination */
     if (fcntl(tap->fd, F_SETOWN, getpid()) == -1) {
-        errorf("fcntl(F_SET_OWN): %s, dev=%s", strerror(errno), dev->name);
+        errorf("fcntl(F_SETOWN): %s, dev=%s", strerror(errno), dev->name);
         close(tap->fd);
         return -1;
     }
     /* Enable Asynchronous I/O */
     if (fcntl(tap->fd, F_SETFL, O_ASYNC) == -1) {
-        errorf("fcntl(F_SETL): %s, dev=%s", strerror(errno), dev->name);
+        errorf("fcntl(F_SETFL): %s, dev=%s", strerror(errno), dev->name);
         close(tap->fd);
         return -1;
     }
@@ -100,8 +100,7 @@ static int ether_tap_open(struct net_device *dev) {
 }
 
 static int ether_tap_close(struct net_device *dev) {
-    close(PRIV(dev)->fd);
-    return 0;
+    return close(PRIV(dev)->fd);
 }
 
 static ssize_t ether_tap_write(struct net_device *dev, const uint8_t *frame, size_t flen) {
@@ -187,6 +186,6 @@ struct net_device *ether_tap_init(const char *name, const char *addr) {
         return NULL;
     }
     intr_request_irq(tap->irq, ether_tap_isr, INTR_IRQ_SHARED, dev->name, dev);
-    infof("ethernet device intialized, dev=%s", dev->name);
+    infof("ethernet device initialized, dev=%s", dev->name);
     return dev;
 }

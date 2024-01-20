@@ -76,7 +76,7 @@ static int intr_timer_setup(struct itimerspec *interval) {
 }
 
 static void *intr_thread(void *arg) {
-    const struct timespec ts = {0, 100000}; /* 1ms */
+    const struct timespec ts = {0, 1000000}; /* 1ms */
     struct itimerspec interval = {ts, ts};
     int terminate = 0, sig, err;
     struct irq_entry *entry;
@@ -136,7 +136,7 @@ int intr_run(void) {
 
 void intr_shutdown(void) {
     if (pthread_equal(tid, pthread_self()) != 0) {
-        /* Thread not created */
+        /* Thread not created. */
         return;
     }
     pthread_kill(tid, SIGHUP);

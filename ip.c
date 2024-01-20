@@ -9,8 +9,8 @@
 
 #include "util.h"
 #include "net.h"
-#include "ip.h"
 #include "arp.h"
+#include "ip.h"
 
 struct ip_hdr {
     uint8_t vhl;
@@ -167,7 +167,7 @@ int ip_protocol_register(uint8_t type, void (*handler)(const uint8_t *data, size
     }
     entry->type = type;
     entry->handler = handler;
-    
+
     entry->next = protocols;
     protocols = entry;
     infof("registered, type=%u", entry->type);
@@ -204,7 +204,7 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
         errorf("total length error: len=%zu < total=%u", len, total);
         return;
     }
-    
+
     if (cksum16((uint16_t *)hdr, hlen, 0) != 0) {
         errorf("checksum error: sum=0x%04x, verify=0x%04x", ntoh16(hdr->sum), ntoh16(cksum16((uint16_t *)hdr, hlen, -hdr->sum)));
         return;

@@ -285,10 +285,8 @@ static void arp_timer_handler(void) {
     for (entry = caches; entry < tailof(caches); entry++) {
         if (entry->state != ARP_CACHE_STATE_FREE && entry->state != ARP_CACHE_STATE_STATIC) {
             timersub(&now, &entry->timestamp, &diff);
-            if (diff.tv_sec > ARP_CACHE_TIMEOUT ) {
-            // if (timercmp(, &diff, <) != 0) {
+            if (diff.tv_sec > ARP_CACHE_TIMEOUT )
                 arp_cache_delete(entry);
-            }
         }
     }
     mutex_unlock(&mutex);
@@ -297,12 +295,12 @@ static void arp_timer_handler(void) {
 int arp_init(void) {
     struct timeval interval = {1, 0}; /* 1s */
 
-    if (net_timer_register(interval, arp_timer_handler) == -1) {
-        errorf("net_timer_register() failure");
-        return -1;
-    }
     if (net_protocol_register(NET_PROTOCOL_TYPE_ARP, arp_input) == -1) {
         errorf("net_protocol_register() failure");
+        return -1;
+    }
+    if (net_timer_register(interval, arp_timer_handler) == -1) {
+        errorf("net_timer_register() failure");
         return -1;
     }
     return 0;

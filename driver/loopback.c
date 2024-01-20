@@ -36,7 +36,7 @@ static int loopback_transmit(struct net_device *dev, uint16_t type, const uint8_
         errorf("queue is full");
         return -1;
     }
-    
+
     entry = memory_alloc(sizeof(*entry) + len);
     if (!entry) {
         mutex_unlock(&PRIV(dev)->mutex);

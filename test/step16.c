@@ -56,7 +56,7 @@ static int setup(void) {
         return -1;
     }
     if (ip_iface_register(dev, iface) == -1) {
-        errorf("ip_iface_register() faiulre");
+        errorf("ip_iface_register() failure");
         return -1;
     }
     if (net_run() == -1) {
@@ -71,7 +71,6 @@ static void cleanup(void) {
 }
 
 int main(int argc, char *argv[]) {
-    signal(SIGINT, on_signal);
     if (setup() == -1) {
         errorf("setup() failure");
         return -1;
@@ -80,4 +79,5 @@ int main(int argc, char *argv[]) {
         sleep(1);
     }
     cleanup();
+    return 0;
 }
