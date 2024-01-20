@@ -253,7 +253,7 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha) {
         cache = arp_cache_alloc();
         if (!cache) {
             mutex_unlock(&mutex);
-            debugf("arp_cache_alloc() failure");
+            errorf("arp_cache_alloc() failure");
             return ARP_RESOLVE_ERROR;
         }
         cache->state = ARP_CACHE_STATE_INCOMPLETE;
@@ -264,8 +264,8 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha) {
         return ARP_RESOLVE_INCOMPLETE;
     }
     if (cache->state == ARP_CACHE_STATE_INCOMPLETE) {
-        arp_request(iface, pa); /* just in case packet loss */
         mutex_unlock(&mutex);
+        arp_request(iface, pa); /* just in case packet loss */
         return ARP_RESOLVE_INCOMPLETE;
     }
     memcpy(ha, cache->ha, ETHER_ADDR_LEN);
